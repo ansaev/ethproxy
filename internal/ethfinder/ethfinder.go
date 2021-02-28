@@ -6,16 +6,18 @@ import (
 	"errors"
 	"ethproxy/internal/domain"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 )
 
 const (
-	methodGetBlockByNum = "eth_getBlockByNumber"
-	methodBlockNum      = "eth_blockNumber"
-	jsonRPCVersion      = "2.0"
-	headerContentType   = "Content-Type"
-	applicationJson     = "application/json"
+	methodGetBlockByNum        = "eth_getBlockByNumber"
+	methodBlockNum             = "eth_blockNumber"
+	jsonRPCVersion             = "2.0"
+	headerContentType          = "Content-Type"
+	applicationJson            = "application/json"
+	confirmations       uint64 = 6
 )
 
 var (
@@ -38,11 +40,23 @@ type service struct {
 	client  httpClient
 }
 
-func ethHexFromInt(num int64) string {
+func ethHexFromInt(num uint64) string {
 	return fmt.Sprintf("0x%x", num)
 }
 
-func (srv *service) GetLatestBlockNum() (int64, error) {
+func (srv *service) IsBlockCacheable(block *domain.Block) bool {
+	blockNum := block.GetNumber()
+	latestBlockNum, err := srv.GetLatestBlockNum()
+	if err != nil {
+		log.Printf("failed to get latest block in order to check is block %d cacheable: %v\n",
+			blockNum, err)
+		return false
+	}
+
+	return blockNum < (latestBlockNum + confirmations)
+}
+
+func (srv *service) GetLatestBlockNum() (uint64, error) {
 	// prepare data for request
 	reqData := &formEthRequest{
 		Jsonrpc: jsonRPCVersion,
@@ -60,7 +74,7 @@ func (srv *service) GetLatestBlockNum() (int64, error) {
 	}
 
 	// parse result
-	blockNum, errParseBlockNum := strconv.ParseInt(result.Result, 0, 64)
+	blockNum, errParseBlockNum := strconv.ParseUint(result.Result, 0, 64)
 	if errParseBlockNum != nil {
 		return 0, fmt.Errorf("failed to parse block num from hex: %w, hex block number: %s",
 			errParseBlockNum, result.Result)
@@ -68,7 +82,7 @@ func (srv *service) GetLatestBlockNum() (int64, error) {
 	return blockNum, nil
 }
 
-func (srv *service) GetBlockByNum(blockID int64) (*domain.Block, error) {
+func (srv *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 	reqData := &formEthRequest{
 		Jsonrpc: jsonRPCVersion,
 		Method:  methodGetBlockByNum,

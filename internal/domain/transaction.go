@@ -16,7 +16,7 @@ type Transaction struct {
 	Value            string `json:"value"`
 }
 
-func (t *Transaction) GetTxIndex() int64 {
-	i, _ := strconv.ParseInt(t.TransactionIndex, 0, 64)
+func (t *Transaction) GetTxIndex() uint64 {
+	i, _ := strconv.ParseUint(t.TransactionIndex, 0, 64)
 	return i
 }

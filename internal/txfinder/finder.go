@@ -16,16 +16,16 @@ var (
 	ErrInvalidBlockID    = errors.New(fmt.Sprintf("blockID must be num or \"%s\"", latest))
 )
 
-type blockGetter interface {
-	GetBlockByNum(blockID int64) (*domain.Block, error)
-	GetLatestBlockNum() (int64, error)
+type BlockGetter interface {
+	GetBlockByNum(blockID uint64) (*domain.Block, error)
+	GetLatestBlockNum() (uint64, error)
 }
 
 type service struct {
-	blockService blockGetter
+	blockService BlockGetter
 }
 
-func New(blockService blockGetter) *service {
+func New(blockService BlockGetter) *service {
 	return &service{
 		blockService: blockService,
 	}
@@ -33,11 +33,11 @@ func New(blockService blockGetter) *service {
 
 func (srv *service) FindTx(blockID string, txID string) (*domain.Transaction, error) {
 	// get block by id
-	var blockNum int64
+	var blockNum uint64
 	// get block id
 	if blockID != latest {
 		var errParseBlockID error
-		blockNum, errParseBlockID = strconv.ParseInt(blockID, 10, 64)
+		blockNum, errParseBlockID = strconv.ParseUint(blockID, 10, 64)
 		if errParseBlockID != nil {
 			return nil, ErrInvalidBlockID
 		}
@@ -55,7 +55,7 @@ func (srv *service) FindTx(blockID string, txID string) (*domain.Transaction, er
 	}
 
 	// parse tx ID
-	txNum, errParseTxNum := strconv.ParseInt(txID, 10, 64)
+	txNum, errParseTxNum := strconv.ParseUint(txID, 10, 64)
 	if errParseTxNum == nil {
 		// search tx by index
 		return srv.findTxByIndex(block, txNum)
@@ -81,7 +81,7 @@ func (srv *service) findTxByHash(block *domain.Block, txHash string) (*domain.Tr
 	return nil, fmt.Errorf("%w, blockHash: %s, txHash: %s", ErrTxNotFoundInBlock, block.Hash, txHash)
 }
 
-func (srv *service) findTxByIndex(block *domain.Block, txIndex int64) (*domain.Transaction, error) {
+func (srv *service) findTxByIndex(block *domain.Block, txIndex uint64) (*domain.Transaction, error) {
 	for i := range block.Transactions {
 		if block.Transactions[i].GetTxIndex() == txIndex {
 			return &block.Transactions[i], nil

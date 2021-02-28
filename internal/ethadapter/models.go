@@ -1,4 +1,4 @@
-package ethfinder
+package ethadapter
 
 import (
 	"ethproxy/internal/domain"

@@ -1,4 +1,4 @@
-package cachefinder
+package blockcacher
 
 import (
 	"encoding/json"
@@ -21,8 +21,7 @@ type cacheService interface {
 }
 
 type service struct {
-	blockService blockGetter
-	// todo: move it to inteface casher
+	blockService   blockGetter
 	cache          cacheService
 	blockchainName string
 	cachingTime    time.Duration

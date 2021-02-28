@@ -2,9 +2,9 @@ package main
 
 import (
 	"ethproxy/internal/api"
-	"ethproxy/internal/cachefinder"
+	"ethproxy/internal/blockcacher"
 	"ethproxy/internal/cacheredis"
-	"ethproxy/internal/ethfinder"
+	"ethproxy/internal/ethadapter"
 	"ethproxy/internal/txfinder"
 	"log"
 	"net/http"
@@ -72,13 +72,13 @@ func main() {
 	cacheService := cacheredis.New(redisClient)
 
 	// init ethereum service
-	ethBlockService := ethfinder.New(os.Getenv(envETHGatewayAddress),
+	ethAdapter := ethadapter.New(os.Getenv(envETHGatewayAddress),
 		&http.Client{Timeout: time.Duration(timeout) * time.Second})
 
 	// init block cache service
-	cacheEthService := cachefinder.New(ethBlockService, cacheService, EthereumName)
+	blockCacher := blockcacher.New(ethAdapter, cacheService, EthereumName)
 
-	txService := txfinder.New(cacheEthService)
+	txService := txfinder.New(blockCacher)
 
 	apiService := api.New(os.Getenv(envListenAddress), txService)
 	errServe := apiService.ListenAndServe()

@@ -27,11 +27,12 @@ type service struct {
 	cachingTime    time.Duration
 }
 
-func New(blockService blockGetter, cache cacheService, blockchainName string) *service {
+func New(blockService blockGetter, cache cacheService, blockchainName string, cachingTime time.Duration) *service {
 	return &service{
 		blockService:   blockService,
 		cache:          cache,
 		blockchainName: blockchainName,
+		cachingTime:    cachingTime,
 	}
 }
 
@@ -48,13 +49,17 @@ func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 		errUnmarshalCashedData := json.Unmarshal(blockData, block)
 		if errUnmarshalCashedData == nil {
 			// return block from cached
+			log.Printf("return block:%d from cache\n", blockID) // debug comment
 			return block, nil
 		}
 		errDelKey := s.cache.Del(cacheKey)
 		if errDelKey != nil {
 			log.Printf("failed to delete key \"%s\" from cache: %v\n", cacheKey, errDelKey)
 		}
+	} else {
+		log.Printf("failed to get block %d from cached: %v\n", blockID, errGetFromCashe) // debug comment
 	}
+
 	// get block from network
 	block, errGetBlock := s.blockService.GetBlockByNum(blockID)
 	if errGetBlock != nil {
@@ -75,6 +80,7 @@ func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 		}
 	}
 
+	log.Printf("return block:%d from network\n", blockID) // debug comment
 	return block, nil
 }
 

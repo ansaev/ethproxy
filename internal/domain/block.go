@@ -25,6 +25,6 @@ func (b *Block) GetTime() time.Time {
 }
 
 func (b *Block) GetNumber() uint64 {
-	num, _ := strconv.ParseUint(b.Timestamp, 0, 64)
+	num, _ := strconv.ParseUint(b.Number, 0, 64)
 	return num
 }

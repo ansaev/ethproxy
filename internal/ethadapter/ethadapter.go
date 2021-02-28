@@ -53,7 +53,7 @@ func (srv *service) IsBlockCacheable(block *domain.Block) bool {
 		return false
 	}
 
-	return blockNum < (latestBlockNum + confirmations)
+	return blockNum+confirmations < latestBlockNum
 }
 
 func (srv *service) GetLatestBlockNum() (uint64, error) {

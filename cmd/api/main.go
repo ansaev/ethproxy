@@ -23,9 +23,11 @@ const (
 	envETHTimeout        = "ETH_TIMEOUT" // in seconds
 	envRedisDB           = "REDIS_DB"
 	envRedisHost         = "REDIS_HOST"
+	envRedisPort         = "REDIS_PORT"
 	envRedisPassword     = "REDIS_PASSWORD"
 
 	defaultEthTimeout int64 = 30
+	blockCachingTime        = 2 * time.Hour
 	redisDialTimeout        = 10 * time.Second
 	redisReadTimeout        = 30 * time.Second
 	redisWriteTimeout       = 30 * time.Second
@@ -60,7 +62,7 @@ func main() {
 		log.Fatalf("unable to parse redis Db number: %v\n", err)
 	}
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:         os.Getenv(envRedisHost),
+		Addr:         os.Getenv(envRedisHost) + ":" + os.Getenv(envRedisPort),
 		Password:     os.Getenv(envRedisPassword),
 		DB:           redisDB,
 		DialTimeout:  redisDialTimeout,
@@ -76,7 +78,7 @@ func main() {
 		&http.Client{Timeout: time.Duration(timeout) * time.Second})
 
 	// init block cache service
-	blockCacher := blockcacher.New(ethAdapter, cacheService, EthereumName)
+	blockCacher := blockcacher.New(ethAdapter, cacheService, EthereumName, blockCachingTime)
 
 	txService := txfinder.New(blockCacher)
 

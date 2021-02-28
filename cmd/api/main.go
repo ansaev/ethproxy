@@ -3,6 +3,7 @@ package main
 import (
 	"ethproxy/internal/api"
 	"ethproxy/internal/cachefinder"
+	"ethproxy/internal/cacheredis"
 	"ethproxy/internal/ethfinder"
 	"ethproxy/internal/txfinder"
 	"log"
@@ -53,6 +54,7 @@ func main() {
 		}
 	}
 
+	// init redis cache service
 	redisDB, err := strconv.Atoi(os.Getenv(envRedisDB))
 	if err != nil {
 		log.Fatalf("unable to parse redis Db number: %v\n", err)
@@ -67,13 +69,16 @@ func main() {
 		PoolSize:     redisPoolSize,
 		PoolTimeout:  redisPoolTimeout,
 	})
+	cacheService := cacheredis.New(redisClient)
 
+	// init ethereum service
 	ethBlockService := ethfinder.New(os.Getenv(envETHGatewayAddress),
 		&http.Client{Timeout: time.Duration(timeout) * time.Second})
 
-	cachefinder.New(ethBlockService, redisClient, EthereumName)
+	// init block cache service
+	cacheEthService := cachefinder.New(ethBlockService, cacheService, EthereumName)
 
-	txService := txfinder.New(ethBlockService)
+	txService := txfinder.New(cacheEthService)
 
 	apiService := api.New(os.Getenv(envListenAddress), txService)
 	errServe := apiService.ListenAndServe()

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"github.com/go-redis/redis"
 )
 
 type blockGetter interface {
@@ -16,15 +14,21 @@ type blockGetter interface {
 	IsBlockCacheable(block *domain.Block) bool
 }
 
+type cacheService interface {
+	Get(key string) ([]byte, error)
+	Set(key string, data []byte, expires time.Duration) error
+	Del(key string) error
+}
+
 type service struct {
 	blockService blockGetter
 	// todo: move it to inteface casher
-	cache          *redis.Client
+	cache          cacheService
 	blockchainName string
 	cachingTime    time.Duration
 }
 
-func New(blockService blockGetter, cache *redis.Client, blockchainName string) *service {
+func New(blockService blockGetter, cache cacheService, blockchainName string) *service {
 	return &service{
 		blockService:   blockService,
 		cache:          cache,
@@ -39,7 +43,7 @@ func (s *service) getCacheKeyForBlockNum(blockID uint64) string {
 func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 	// try get from cash
 	cacheKey := s.getCacheKeyForBlockNum(blockID)
-	blockData, errGetFromCashe := s.cache.Get(cacheKey).Bytes()
+	blockData, errGetFromCashe := s.cache.Get(cacheKey)
 	if errGetFromCashe == nil {
 		block := &domain.Block{}
 		errUnmarshalCashedData := json.Unmarshal(blockData, block)
@@ -47,7 +51,10 @@ func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 			// return block from cached
 			return block, nil
 		}
-		s.cache.Del(cacheKey)
+		errDelKey := s.cache.Del(cacheKey)
+		if errDelKey != nil {
+			log.Printf("failed to delete key \"%s\" from cache: %v\n", cacheKey, errDelKey)
+		}
 	}
 	// get block from network
 	block, errGetBlock := s.blockService.GetBlockByNum(blockID)

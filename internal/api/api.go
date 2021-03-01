@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -47,21 +49,35 @@ func (srv *service) getServiceHandler() chi.Router {
 		middleware.RequestID,
 		middleware.Logger,
 	)
-
-	router.Route("/tx/", func(r chi.Router) {
-		router.Use(
+	router.Get("/swagger/*", httpSwagger.Handler())
+	//router.Route("/swagger", func(r chi.Router) {
+	//
+	//})
+	router.Route("/", func(r chi.Router) {
+		r.Use(
 			middleware.Recoverer,
 			middleware.NoCache,
 			middleware.SetHeader("Content-Type", "application/json"),
 		)
 
-		router.Get(fmt.Sprintf("/block/{%s}/tx/{%s}", BlockIDParam, TxIDParam), srv.txHandler)
+		r.Get(fmt.Sprintf("/block/{%s}/tx/{%s}", BlockIDParam, TxIDParam), srv.txHandler)
 	})
 
 	return router
 
 }
 
+// txHandler godoc
+// @Summary GetTx handler
+// @Description Get tx by hash or index number
+// @Accept json
+// @Produce json
+// @Success 200 {object} TxResponse
+// @Failure 400 {object} TxResponse
+// @Failure 500 {object} TxResponse
+// @Router /block/{blockID}/tx/{txID} [get]
+// @Param blockID path string true "Block number, or 'latest'"
+// @Param txID path string true "Tx index, or tx hash"
 func (srv *service) txHandler(w http.ResponseWriter, r *http.Request) {
 	// get and validate request's data
 	blockID := chi.URLParam(r, BlockIDParam)

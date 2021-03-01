@@ -1,0 +1,76 @@
+definitions:
+  api.ErrorForm:
+    properties:
+      message:
+        type: string
+    type: object
+  api.TxResponse:
+    properties:
+      data:
+        $ref: '#/definitions/domain.Transaction'
+      error:
+        $ref: '#/definitions/api.ErrorForm'
+      ok:
+        type: boolean
+    type: object
+  domain.Transaction:
+    properties:
+      blockHash:
+        type: string
+      blockNumber:
+        type: string
+      from:
+        type: string
+      gas:
+        type: string
+      gasPrice:
+        type: string
+      hash:
+        type: string
+      input:
+        type: string
+      nonce:
+        type: string
+      to:
+        type: string
+      transactionIndex:
+        type: string
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /block/{blockID}/tx/{txID}:
+    get:
+      consumes:
+      - application/json
+      description: Get tx by hash or index number
+      parameters:
+      - description: Block number, or 'latest'
+        in: path
+        name: blockID
+        required: true
+        type: string
+      - description: Tx index, or tx hash
+        in: path
+        name: txID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.TxResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.TxResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.TxResponse'
+      summary: GetTx handler
+swagger: "2.0"

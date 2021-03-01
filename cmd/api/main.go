@@ -1,6 +1,8 @@
+//go:generate swag init --parseDependency --generatedTime --output ../../docs/api
 package main
 
 import (
+	_ "ethproxy/docs/api" // init swagger docs
 	"ethproxy/internal/api"
 	"ethproxy/internal/blockcacher"
 	"ethproxy/internal/cacheredis"

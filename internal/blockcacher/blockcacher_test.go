@@ -18,7 +18,7 @@ func TestGetBlockByNum_blockNotInCacheAndNotCacheble(t *testing.T) {
 	}
 	blockID := uint64(123)
 
-	cacheBlockService := New(blockService, cacheService, "test", time.Second)
+	cacheBlockService := New(blockService, cacheService, "test", time.Second, true)
 	block, err := cacheBlockService.GetBlockByNum(blockID)
 	if err != nil {
 		t.Fatal("failed to get block via cash: ", err)
@@ -50,7 +50,7 @@ func TestGetBlockByNum_blockNotInCacheAndCacheble(t *testing.T) {
 	}
 	blockID := uint64(123)
 
-	cacheBlockService := New(blockService, cacheService, "test", time.Second)
+	cacheBlockService := New(blockService, cacheService, "test", time.Second, true)
 	block, err := cacheBlockService.GetBlockByNum(blockID)
 	if err != nil {
 		t.Fatal("failed to get block via cash: ", err)
@@ -82,7 +82,7 @@ func TestGetBlockByNum_blockInCacheAndCacheble(t *testing.T) {
 	}
 	blockID := uint64(123)
 
-	cacheBlockService := New(blockService, cacheService, "test", time.Second)
+	cacheBlockService := New(blockService, cacheService, "test", time.Second, true)
 	block, err := cacheBlockService.GetBlockByNum(blockID)
 	if err != nil {
 		t.Fatal("failed to get block via cash: ", err)

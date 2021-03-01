@@ -25,14 +25,17 @@ type service struct {
 	cache          cacheService
 	blockchainName string
 	cachingTime    time.Duration
+	isDebug        bool
 }
 
-func New(blockService blockGetter, cache cacheService, blockchainName string, cachingTime time.Duration) *service {
+func New(blockService blockGetter, cache cacheService, blockchainName string, cachingTime time.Duration,
+	isDebug bool) *service {
 	return &service{
 		blockService:   blockService,
 		cache:          cache,
 		blockchainName: blockchainName,
 		cachingTime:    cachingTime,
+		isDebug:        isDebug,
 	}
 }
 
@@ -49,7 +52,9 @@ func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 		errUnmarshalCashedData := json.Unmarshal(blockData, block)
 		if errUnmarshalCashedData == nil {
 			// return block from cached
-			log.Printf("return block:%d from cache\n", blockID) // debug comment
+			if s.isDebug {
+				log.Printf("return block:%d from cache\n", blockID)
+			}
 			return block, nil
 		}
 		errDelKey := s.cache.Del(cacheKey)
@@ -80,7 +85,9 @@ func (s *service) GetBlockByNum(blockID uint64) (*domain.Block, error) {
 		}
 	}
 
-	log.Printf("return block:%d from network\n", blockID) // debug comment
+	if s.isDebug {
+		log.Printf("return block:%d from network\n", blockID) // debug comment
+	}
 	return block, nil
 }
 

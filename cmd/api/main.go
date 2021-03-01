@@ -25,6 +25,9 @@ const (
 	envRedisHost         = "REDIS_HOST"
 	envRedisPort         = "REDIS_PORT"
 	envRedisPassword     = "REDIS_PASSWORD"
+	envDebug             = "DEBUG"
+
+	valueTrue = "true"
 
 	defaultEthTimeout int64 = 30
 	blockCachingTime        = 2 * time.Hour
@@ -56,6 +59,11 @@ func main() {
 		}
 	}
 
+	isDebug := false
+	if os.Getenv(envDebug) == valueTrue {
+		isDebug = true
+	}
+
 	// init redis cache service
 	redisDB, err := strconv.Atoi(os.Getenv(envRedisDB))
 	if err != nil {
@@ -78,7 +86,7 @@ func main() {
 		&http.Client{Timeout: time.Duration(timeout) * time.Second})
 
 	// init block cache service
-	blockCacher := blockcacher.New(ethAdapter, cacheService, EthereumName, blockCachingTime)
+	blockCacher := blockcacher.New(ethAdapter, cacheService, EthereumName, blockCachingTime, isDebug)
 
 	txService := txfinder.New(blockCacher)
 

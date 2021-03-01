@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	pathData             = "internal/blockcacher/data/"
+	pathData             = "data/"
 	pathBlockFile        = "block.json"
 	lastBlockNum  uint64 = 345
 )

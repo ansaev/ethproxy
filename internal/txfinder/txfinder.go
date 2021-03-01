@@ -13,7 +13,8 @@ const (
 
 var (
 	ErrTxNotFoundInBlock = errors.New("cannot find tx in block")
-	ErrInvalidBlockID    = errors.New(fmt.Sprintf("blockID must be num or \"%s\"", latest))
+	// nolint:gosimple // always use errors.New for producing new errors
+	ErrInvalidBlockID = errors.New(fmt.Sprintf("blockID must be num or \"%s\"", latest))
 )
 
 type BlockGetter interface {

@@ -1,5 +1,8 @@
 package ethadapter
 
+// client and adapter for
+// https://developers.cloudflare.com/distributed-web/ethereum-gateway/interacting-with-the-eth-gateway
+
 import (
 	"bytes"
 	"encoding/json"

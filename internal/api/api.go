@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"ethproxy/internal/domain"
 	"fmt"
+	"log"
 
 	"net/http"
 
@@ -14,7 +15,6 @@ import (
 const (
 	BlockIDParam = "blockID"
 	TxIDParam    = "txID"
-	Latest       = "latest"
 )
 
 func New(listeningAddress string, txService txFinder) *service {
@@ -62,19 +62,24 @@ func (srv *service) getServiceHandler() chi.Router {
 
 }
 
-// TODO: add structs in errors and in responces
 func (srv *service) txHandler(w http.ResponseWriter, r *http.Request) {
 	// get and validate request's data
 	blockID := chi.URLParam(r, BlockIDParam)
 	txID := chi.URLParam(r, TxIDParam)
 	if blockID == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("empty block id"))
+		errWrite := json.NewEncoder(w).Encode(&TxResponse{Ok: false, Error: &ErrorForm{"empty block id"}})
+		if errWrite != nil {
+			log.Printf("failed to write response #1: %v\n", errWrite)
+		}
 		return
 	}
 	if txID == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("empty block id"))
+		errWrite := json.NewEncoder(w).Encode(&TxResponse{Ok: false, Error: &ErrorForm{"empty tx id"}})
+		if errWrite != nil {
+			log.Printf("failed to write response #2: %v\n", errWrite)
+		}
 		return
 	}
 
@@ -83,12 +88,19 @@ func (srv *service) txHandler(w http.ResponseWriter, r *http.Request) {
 	// return response
 	if errFindTx != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("failed to get tx: %v", errFindTx)))
+		errWrite := json.NewEncoder(w).Encode(&TxResponse{
+			Ok: false, Error: &ErrorForm{fmt.Sprintf("failed to get tx: %v", errFindTx)}})
+		if errWrite != nil {
+			log.Printf("failed to write response #3: %v\n", errWrite)
+		}
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(tx)
+	errWrite := json.NewEncoder(w).Encode(&TxResponse{Ok: true, Data: tx})
+	if errWrite != nil {
+		log.Printf("failed to write response #4: %v\n", errWrite)
+	}
 }
 
 func (srv *service) ListenAndServe() error {
